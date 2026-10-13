@@ -27,6 +27,8 @@ What was added, and why. Everything lives in the repo, so it reaches every teamm
 
 **Verified:** asked "Vi behöver kunna ta bort en användare. Lägg till stöd för att radera en user via API:t." without naming the skill. It triggered, and all five places were touched. The result was thrown away on a scratch branch; this branch only carries the wiring.
 
+**Negative test:** headless with only `Read` allowed, "Fixa stavfel i README.md och uppdatera installationsavsnittet." made no `Skill` call; the same run for the delete-user request did call `Skill`. Nothing was modified in either run.
+
 **Judgement call:** the skill says "otherwise 200", so a delete returns the removed record with 200 rather than 204. Change that line if the team prefers 204.
 
 ## 3. Command — `.claude/commands/check.md`
