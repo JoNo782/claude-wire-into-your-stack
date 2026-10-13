@@ -12,6 +12,7 @@ What was added, and why. Everything lives in the repo, so it reaches every teamm
 - `permissions.allow` pre-approves only `read_text_file`, `list_directory`, `search_files`, `write_file` and `edit_file`. Everything else (`move_file`, `create_directory`, …) still asks.
 - **Finding:** the server's allowed directory is *not* `./docs`. Claude Code announces the project root as an MCP root, and the server prefers client roots over its CLI arguments, so `list_allowed_directories` reports the whole repo. The argument alone is therefore not a boundary.
 - **Fix:** a `PreToolUse` hook (`.claude/hooks/docs-only-writes.js`) matches `mcp__filesystem__(write_file|edit_file)` and blocks any target that resolves outside `docs/`. It fails closed: unparseable input is blocked too.
+- **Verified in a live session:** a `write_file` to `hook-probe.txt` in the repo root was blocked with the hook's message and no file was created; a `write_file` to `docs/hook-probe.md` went through. The probe file was removed afterwards.
 - **Known gap:** `move_file` and `create_directory` are not matched by the hook. They are not pre-approved, so they prompt, but the prompt is the only guard.
 
 **Honest assessment:** in Claude Code this server largely duplicates the built-in Read/Edit/Write tools. It is here to demonstrate project-scoped MCP, permissions and hooks working together. A server that adds a capability Claude lacks (fetch, library docs) would be the more useful choice for real work.
