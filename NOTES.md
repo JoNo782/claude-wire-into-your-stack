@@ -54,4 +54,23 @@ What was added, and why. Everything lives in the repo, so it reaches every teamm
 - In a live session: writing `tests/lint-probe.js` with `const unused = 1;` fired the hook and returned the lint output. The probe was removed afterwards.
 - **Bug caught on the way:** the first version resolved ESLint with `require.resolve("eslint/bin/eslint.js")`, which ESLint's `exports` map rejects. The `catch` treated that as "not installed" and the hook silently never linted. It now addresses the binary by path. Lesson: a hook that fails open needs a test that proves it can fail closed.
 
-## 5. Headless run — _not done yet_
+## 5. Headless run
+
+**Task:** run the tests and the linter and report, without changing anything.
+
+```
+claude -p "Run npm test and npm run lint and report any failures. Do not modify files."   --allowedTools "Bash(npm test:*)" "Bash(npm run lint:*)" "Read"
+```
+
+**What was allowed, and why:**
+- `Bash(npm test:*)` and `Bash(npm run lint:*)`: exactly the two commands the task needs, not general shell.
+- `Read`: enough to look at a failing file when reporting.
+- No `Edit` or `Write`, so the run cannot change the repo. Anything outside the list is denied rather than prompted, since nobody is there to answer.
+
+**Result:** exit 0, about 18 s. Tests 5/5 passed, lint clean, no files modified (`git status` stayed clean).
+
+**Finding: project settings are ignored until the workspace is trusted.** The run printed:
+`Ignoring 5 permissions.allow entries from .claude/settings.json: this workspace has not been trusted.`
+Headless mode does not show the trust dialog, so a fresh clone or CI runner skips the project's `permissions.allow` and, most likely, its hooks (not confirmed). The task above still worked because `--allowedTools` is a command-line flag, not project config. Consequences:
+- The commands that must be pre-approved belong in `--allowedTools`, not only in `settings.json`.
+- Do not assume the lint and docs hooks protect an unattended run unless trust has been granted for that workspace (open it once interactively, or set `hasTrustDialogAccepted` for the project in `~/.claude.json`).
