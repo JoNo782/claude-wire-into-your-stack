@@ -37,8 +37,21 @@ What was added, and why. Everything lives in the repo, so it reaches every teamm
 
 **Scoping:** `allowed-tools` limits it to `npm test`, `npm run lint`, Read and Grep, and the prompt says not to modify files. Anything after `/check` is passed through as `$ARGUMENTS` for extra instructions.
 
-## 4. Hook — _see note_
+## 4. Hook — `.claude/hooks/lint-on-edit.js`
 
-The `PreToolUse` hook above enforces the docs-only write boundary. A separate "standard that must always hold" hook (for example lint or test on edit) is still to be decided.
+**Choice:** a `PostToolUse` hook on `Edit|Write` that lints every JS file Claude touches inside `server.js`, `routes/`, `db/` and `tests/` (the same scope as `npm run lint`) with the project's own ESLint config.
+
+**Why:** "lint passes" is a standard the project already has, and it is cheap to forget. A hook makes it hold every time, regardless of what was asked or which tool wrote the file. It is separate from the docs-only hook in section 1, which only guards the MCP server.
+
+**Behaviour:** on failure it exits 2 and the lint output goes back to Claude, which fixes the file in the same turn. Non-JS files and files outside the linted folders are ignored. If `node_modules` is missing it does nothing rather than blocking.
+
+**Choices to know about:**
+- It runs with `--max-warnings 0`, which is stricter than `npm run lint` (that exits 0 on warnings). The repo is warning-clean today, and an unused variable is exactly the kind of drift the hook should catch. Drop the flag to match CI.
+- It runs after the write, so the bad file does exist on disk until Claude fixes it. A `PreToolUse` hook cannot lint content that has not been written yet.
+
+**Verified:**
+- Directly: a file with an unused variable exits 2, a clean file and a non-JS file exit 0.
+- In a live session: writing `tests/lint-probe.js` with `const unused = 1;` fired the hook and returned the lint output. The probe was removed afterwards.
+- **Bug caught on the way:** the first version resolved ESLint with `require.resolve("eslint/bin/eslint.js")`, which ESLint's `exports` map rejects. The `catch` treated that as "not installed" and the hook silently never linted. It now addresses the binary by path. Lesson: a hook that fails open needs a test that proves it can fail closed.
 
 ## 5. Headless run — _not done yet_
