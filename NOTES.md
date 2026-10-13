@@ -28,7 +28,13 @@ What was added, and why. Everything lives in the repo, so it reaches every teamm
 
 **Judgement call:** the skill says "otherwise 200", so a delete returns the removed record with 200 rather than 204. Change that line if the team prefers 204.
 
-## 3. Command — _not done yet_
+## 3. Command — `.claude/commands/check.md`
+
+**Choice:** `/check`, which runs `npm test` and `npm run lint` and summarizes failures with a verdict on whether the tree is safe to commit.
+
+**Why:** it is the thing run before every commit, so it earns a short name. It is also deliberately different from the skill: the skill is something Claude picks up on its own, the command is something a person invokes.
+
+**Scoping:** `allowed-tools` limits it to `npm test`, `npm run lint`, Read and Grep, and the prompt says not to modify files. Anything after `/check` is passed through as `$ARGUMENTS` for extra instructions.
 
 ## 4. Hook — _see note_
 
